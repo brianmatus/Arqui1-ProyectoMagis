@@ -15,7 +15,7 @@
 #define START 4
 #define PREVIOUS 7
 
-#define SONG_SPEED_MULTIPLIER 1
+float SONG_SPEED_MULTIPLIER[] = {4.0,1.5,4.0,1.0, 1.0,1};
 #define PAUSE_BETWEEN_NOTES 30
 
 
@@ -25,8 +25,8 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 int selected_song = 0;
 bool song_is_playing = true;
 bool lows_finished = false;
-bool mids_finished = false; //TODO change to false
-bool highs_finished = false; //TODO change to false
+bool mids_finished = false;
+bool highs_finished = false;
 
 unsigned int freq_l = 0;
 unsigned int freq_m = 0;
@@ -76,12 +76,13 @@ void playLows() {
 
   if (current_song_l_note_index == max_song_l_index) {
     lows_finished = true;
+    freq_l = 0;
     return;
   }
 
   int l_note = getLowNoteAt(current_song_l_note_index);
   int l_duration = getLowDurationAt(current_song_l_note_index);
-  int l_note_duration = l_duration * SONG_SPEED_MULTIPLIER;
+  int l_note_duration = l_duration * SONG_SPEED_MULTIPLIER[selected_song];
   
   if (l_pause_needed) {
     freq_l = REST;
@@ -93,8 +94,8 @@ void playLows() {
     song_l_target_millis = millis() + l_note_duration;
     current_song_l_note_index++;
     l_pause_needed = true;
-    Serial.print("Hz is ");
-    Serial.println(l_note);
+    // Serial.print("Low Hz is ");
+    // Serial.println(l_note);
   }
 }
 
@@ -109,12 +110,13 @@ void playMids() {
 
   if (current_song_m_note_index == max_song_m_index) {
     mids_finished = true;
+    freq_m = 0;
     return;
   }
 
   int m_note = getMidNoteAt(current_song_m_note_index);
   int m_duration = getMidDurationAt(current_song_m_note_index);
-  int m_note_duration = m_duration * SONG_SPEED_MULTIPLIER;
+  int m_note_duration = m_duration * SONG_SPEED_MULTIPLIER[selected_song];
   
   if (m_pause_needed) {
     freq_m = REST;
@@ -141,12 +143,13 @@ void playHighs() {
 
   if (current_song_h_note_index == max_song_h_index) {
     highs_finished = true;
+    freq_h = 0;
     return;
   }
 
   int h_note = getHighNoteAt(current_song_h_note_index);
   int h_duration = getHighDurationAt(current_song_h_note_index);
-  int h_note_duration = h_duration * SONG_SPEED_MULTIPLIER;
+  int h_note_duration = h_duration * SONG_SPEED_MULTIPLIER[selected_song];
   
   if (h_pause_needed) {
     freq_h = REST;
@@ -166,9 +169,10 @@ void playSong() {
   if (!song_is_playing) {return;}
 
   if (lows_finished && mids_finished && highs_finished) {
-    Serial.println("Trigger next song");
     selected_song = (selected_song+1)%6;
     resetSongVariables();
+    Serial.print("Trigger next song to");
+    Serial.println(selected_song);
   }
   playLows();
   playMids();
@@ -487,23 +491,22 @@ void drawPauseIcon() {
 int getLowDurationAt(int i) {
   switch (selected_song) {
     case 0:
-      // return d_l_0[i];
       return pgm_read_word(&d_l_0[i]);
       break;
     case 1:
-      return d_l_1[i];
+      return pgm_read_word(&d_l_1[i]);
       break;
     case 2:
-      return d_l_2[i];
+      return pgm_read_word(&d_l_2[i]);
       break;
     case 3:
-      return d_l_3[i];
+      return pgm_read_word(&d_l_3[i]);
       break;
     case 4:
-      return d_l_4[i];
+      return pgm_read_word(&d_l_4[i]);
       break;
     case 5:
-      return d_l_5[i];
+      return pgm_read_word(&d_l_5[i]);
       break;
   }
 }
@@ -511,23 +514,22 @@ int getLowDurationAt(int i) {
 int getLowNoteAt(int i) {
   switch (selected_song) {
     case 0:
-      // return n_l_0[i];
       return pgm_read_word(&n_l_0[i]);
       break;
     case 1:
-      return n_l_1[i];
+      return pgm_read_word(&n_l_1[i]);
       break;
     case 2:
-      return n_l_2[i];
+      return pgm_read_word(&n_l_2[i]);
       break;
     case 3:
-      return n_l_3[i];
+      return pgm_read_word(&n_l_3[i]);
       break;
     case 4:
-      return n_l_4[i];
+      return pgm_read_word(&n_l_4[i]);
       break;
     case 5:
-      return n_l_5[i];
+      return pgm_read_word(&n_l_5[i]);
       break;
   }
 }
@@ -535,23 +537,22 @@ int getLowNoteAt(int i) {
 int getMidDurationAt(int i) {
   switch (selected_song) {
     case 0:
-      // return d_m_0[i];
       return pgm_read_word(&d_m_0[i]);
       break;
     case 1:
-      return d_m_1[i];
+      return pgm_read_word(&d_m_1[i]);
       break;
     case 2:
-      return d_m_2[i];
+      return pgm_read_word(&d_m_2[i]);
       break;
     case 3:
-      return d_m_3[i];
+      return pgm_read_word(&d_m_3[i]);
       break;
     case 4:
-      return d_m_4[i];
+      return pgm_read_word(&d_m_4[i]);
       break;
     case 5:
-      return d_m_5[i];
+      return pgm_read_word(&d_m_5[i]);
       break;
   }
 }
@@ -559,23 +560,22 @@ int getMidDurationAt(int i) {
 int getMidNoteAt(int i) {
   switch (selected_song) {
     case 0:
-      // return n_m_0[i];
       return pgm_read_word(&n_m_0[i]);
       break;
     case 1:
-      return n_m_1[i];
+      return pgm_read_word(&n_m_1[i]);
       break;
     case 2:
-      return n_m_2[i];
+      return pgm_read_word(&n_m_2[i]);
       break;
     case 3:
-      return n_m_3[i];
+      return pgm_read_word(&n_m_3[i]);
       break;
     case 4:
-      return n_m_4[i];
+      return pgm_read_word(&n_m_4[i]);
       break;
     case 5:
-      return n_m_5[i];
+      return pgm_read_word(&n_m_5[i]);
       break;
   }
 }
@@ -583,23 +583,22 @@ int getMidNoteAt(int i) {
 int getHighDurationAt(int i) {
   switch (selected_song) {
     case 0:
-      // return d_h_0[i];
       return pgm_read_word(&d_h_0[i]);
       break;
     case 1:
-      return d_h_1[i];
+      return pgm_read_word(&d_h_1[i]);
       break;
     case 2:
-      return d_h_2[i];
+      return pgm_read_word(&d_h_2[i]);
       break;
     case 3:
-      return d_h_3[i];
+      return pgm_read_word(&d_h_3[i]);
       break;
     case 4:
-      return d_h_4[i];
+      return pgm_read_word(&d_h_4[i]);
       break;
     case 5:
-      return d_h_5[i];
+      return pgm_read_word(&d_h_5[i]);
       break;
   }
 }
@@ -607,23 +606,22 @@ int getHighDurationAt(int i) {
 int getHighNoteAt(int i) {
   switch (selected_song) {
     case 0:
-      // return n_h_0[i];
       return pgm_read_word(&n_h_0[i]);
       break;
     case 1:
-      return n_h_1[i];
+      return pgm_read_word(&n_h_1[i]);
       break;
     case 2:
-      return n_h_2[i];
+      return pgm_read_word(&n_h_2[i]);
       break;
     case 3:
-      return n_h_3[i];
+      return pgm_read_word(&n_h_3[i]);
       break;
     case 4:
-      return n_h_4[i];
+      return pgm_read_word(&n_h_4[i]);
       break;
     case 5:
-      return n_h_5[i];
+      return pgm_read_word(&n_h_5[i]);
       break;
   }
 }
