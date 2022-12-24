@@ -16,6 +16,7 @@
 #define PREVIOUS 7
 
 float SONG_SPEED_MULTIPLIER[] = {4.0,1.5,4.0,1.0, 1.0,1};
+long songs_durations[] = {60,47,62,60,60,38};
 #define PAUSE_BETWEEN_NOTES 30
 
 
@@ -33,6 +34,7 @@ unsigned int freq_m = 0;
 unsigned int freq_h = 0;
 
 void setup() {
+
   pinMode(BUZZER_LOW, OUTPUT);
   pinMode(BUZZER_MID, OUTPUT);
   pinMode(BUZZER_HIGH, OUTPUT);
@@ -46,6 +48,7 @@ void setup() {
   drawPlayIcon();
   drawPreviousIcon();
   drawNextIcon();
+  updateDisplayedSongDuration();
 }
 
 
@@ -135,7 +138,7 @@ void playMids() {
 
 unsigned long song_h_target_millis = 0;
 int current_song_h_note_index = 0;
-int max_song_h_index = ARRAYSIZE(n_h_0);
+int max_song_h_index = ARRAYSIZE(d_h_0);
 bool h_pause_needed = true;
 void playHighs() {
   if (highs_finished) {return;}
@@ -171,6 +174,7 @@ void playSong() {
   if (lows_finished && mids_finished && highs_finished) {
     selected_song = (selected_song+1)%6;
     resetSongVariables();
+    updateDisplayedSongDuration();
     Serial.print("Trigger next song to");
     Serial.println(selected_song);
   }
@@ -206,8 +210,68 @@ void updateProgressBar() {
   //TODO To calculate percentage, use loop n notes, add +PAUSE_BETWEEN_NOTES*array.size?
   last_progress_bar_pos = percentage*2+20;
   tft.fillCircle(last_progress_bar_pos, 267, 5, ILI9341_WHITE);
+  updateDisplayedSongPassedTime();
   progress_bar_target_millis = millis() + 1000;
+
+  
+
 };
+
+
+long total_time = 0;
+void updateDisplayedSongPassedTime() {
+
+  tft.fillRect(15, 280, 25, 7, ILI9341_BLACK);
+
+  long mins = total_time/60/1000;
+  long t = mins;
+  t = t*60;
+  t = t*1000;
+  long secs = total_time-t;
+  secs = secs/1000;
+  
+  tft.setTextSize(1);
+  tft.setCursor(15, 280);
+  tft.print(mins);
+  if (secs < 10) {
+    tft.print(":0");
+  }
+  else {
+    tft.print(":");
+  }
+  tft.print(secs);
+
+  total_time += 1000;
+
+}
+
+
+long current_song_total_time = 42000;
+void updateDisplayedSongDuration() {
+
+  tft.fillRect(200, 280, 25, 7, ILI9341_BLACK);
+
+  long mins = current_song_total_time/60/1000;
+
+  long t = mins;
+  t = t*60;
+  t = t*1000;
+
+  long secs = current_song_total_time-t;
+  secs = secs/1000;
+
+  tft.setTextSize(1);
+  tft.setCursor(200, 280);
+  tft.print(mins);
+  if (secs < 10) {
+    tft.print(":0");
+  }
+  else {
+    tft.print(":");
+  }
+  tft.print(secs);
+}
+
 
 
 bool play_button_pressed = false;
@@ -239,6 +303,7 @@ void detectNextButton() {
   }
   selected_song = (selected_song+1)%6;
   resetSongVariables();
+  updateDisplayedSongDuration();
   next_button_pressed = false; 
 }
 
@@ -318,6 +383,10 @@ void resetSongVariables() {
   max_song_l_index = sizeOfCurrentSongLow() - 1;
   max_song_m_index = sizeOfCurrentSongMid() - 1;
   max_song_h_index = sizeOfCurrentSongHigh() - 1;
+
+  total_time = 0;
+  current_song_total_time = songs_durations[selected_song];
+  current_song_total_time *= 1000;
 }
 
 unsigned long anim_start_target_time = 0;
@@ -735,4 +804,62 @@ void resonateHighNote() {
   digitalWrite(BUZZER_HIGH, is_active_part_h ? HIGH : LOW);
   is_active_part_h = !is_active_part_h;
   resonate_micros_objective_h = 1000000/(freq_h*2) + micros();
+}
+
+
+long songTimePassedUntilIndex(int index) {
+
+
+  long sum = 0;
+  switch (selected_song) {
+    case 0:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_0[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+    case 1:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_1[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+    case 2:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_2[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+    case 3:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_3[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+    case 4:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_4[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+    case 5:
+      for (int i = 0; i<index-1;i++) {
+        sum += pgm_read_word(&d_h_5[i]);
+      }
+      sum = sum*SONG_SPEED_MULTIPLIER[selected_song];
+      sum += index*PAUSE_BETWEEN_NOTES;
+      return sum;
+      break;
+  }
+
 }
